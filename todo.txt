@@ -1,10 +1,13 @@
-json deserialization (didnt work, idk why)
-- The type initializer for 'MethodInfoStoreGeneric_FromJson_Public_Static_T_String_0`1' threw an exception. ---> System.NullReferenceException: Object reference not set to an instance of an object
-- use different than orig unity?
-
 richtext?
 - fix: https://discord.com/channels/439093693769711616/548545237123989505/847622045390209074
 
-check if same world
+melonpreferences
+- turn on/off 
 
 domain instead of ip
+
+better error messages (also cannot connect etc.)
+
+remove steam digits if present in name
+
+it's starting to wooooooorrkkkrkrkrk

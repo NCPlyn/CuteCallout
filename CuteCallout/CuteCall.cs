@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Linq;
 using MelonLoader;
 using UnityEngine;
-using UnityEngine.UI;
-using VRC.Core;
-using UnhollowerRuntimeLib.XrefScans;
-using System.Reflection;
-using System.Collections;
 using WebSocketSharp;
 using UIExpansionKit.API;
 
@@ -30,7 +24,18 @@ namespace CuteCallout
             {
                 UnityEngine.UI.Text obj = GameObject.Find("UserInterface/UnscaledUI/HudContent/Hud/AlertTextParent/Text").GetComponent<UnityEngine.UI.Text>();
                 obj.alignment = TextAnchor.LowerCenter;
-                VRCUiManager.prop_VRCUiManager_0.Method_Public_Void_String_0(e.Data);
+                string[] splitArray = e.Data.Split(char.Parse(";"));
+                if(RoomManager.field_Internal_Static_ApiWorldInstance_0.instanceId == splitArray[1])
+                {
+                    VRCUiManager.prop_VRCUiManager_0.Method_Public_Void_String_0(splitArray[0]+splitArray[2]);
+                }
+            };
+
+            ws.OnError += (sender, e) => {
+                MelonLogger.Msg("WebSocket Error has occured!");
+            };
+            ws.OnClose += (sender, e) => {
+                MelonLogger.Msg("WebSocket has been closed!");
             };
         }
 
@@ -41,7 +46,8 @@ namespace CuteCallout
                 var showName = GameObject.Find("UserInterface/QuickMenu").GetComponent<QuickMenu>().field_Private_APIUser_0.displayName;
                 if (showName != null)
                 {
-                    ws.Send(showName);
+                    var worldInstID = RoomManager.field_Internal_Static_ApiWorldInstance_0.instanceId;
+                    ws.Send(showName + ";" + worldInstID);
                 }
             }
         }
