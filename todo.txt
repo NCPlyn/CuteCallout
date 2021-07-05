@@ -1,13 +1,6 @@
-richtext?
-- fix: https://discord.com/channels/439093693769711616/548545237123989505/847622045390209074
-
 melonpreferences
-- turn on/off 
+turn mod off&on
 
 domain instead of ip
 
-better error messages (also cannot connect etc.)
-
-remove steam digits if present in name
-
-it's starting to wooooooorrkkkrkrkrk
+random picked messages nodejs
