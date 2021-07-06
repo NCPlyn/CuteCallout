@@ -1,6 +1,10 @@
-melonpreferences
-turn mod off&on
+dll:
+- domain instead of ip
+- fix richtext fix in update
+- get button active into onUiInit
 
-domain instead of ip
+server:
+- format logs
+ - from ip ; got this message ; sent this back to all
 
-random picked messages nodejs
+will it even work with more people? xD

@@ -4,6 +4,7 @@ using WebSocketSharp;
 using UIExpansionKit.API;
 using System.Collections;
 using System.Text.RegularExpressions;
+using System;
 
 namespace CuteCallout
 {
@@ -11,31 +12,37 @@ namespace CuteCallout
     {
         WebSocket ws = new WebSocket("ws://localhost:8080");
         int retry = 0;
-        bool fixRich = false;
         UnityEngine.UI.Text AlertText;
+        bool modEnabled = true;
+        internal static MelonPreferences_Entry<bool> modEnabledPref;
+        public static GameObject uixButton;
 
         public override void OnApplicationStart()
         {
-            ws.Connect();
+            var category = MelonPreferences.CreateCategory("CuteCallout", "CuteCallout Settings");
+            modEnabledPref = category.CreateEntry("modEnabledPref", true, is_hidden: true);
+            modEnabled = modEnabledPref.Value;
 
-            ExpansionKitApi.GetExpandedMenu(ExpandedMenu.UserQuickMenu).AddSimpleButton("Call him cute!", () =>
+            if (modEnabled)
             {
-                if (ws != null)
-                {
-                    ws.Send(getOnlyName() + ";" + getOnlyID());
-                }
-            });
+                MelonCoroutines.Start(Connecter());
+            }
+
+            ExpansionKitApi.GetExpandedMenu(ExpandedMenu.UserQuickMenu).AddSimpleButton("Call him cute!",
+                new Action(() => CallOutButton()),
+                new Action<GameObject>((gameObject) => { uixButton = gameObject; }));
+
+            ExpansionKitApi.GetExpandedMenu(ExpandedMenu.SettingsMenu).AddSimpleButton("Toogle Callout", ToogleMod);
 
             ws.OnMessage += (sender, e) =>
             {
                 AlertText = GameObject.Find("UserInterface/UnscaledUI/HudContent/Hud/AlertTextParent/Text").GetComponent<UnityEngine.UI.Text>();
                 AlertText.alignment = TextAnchor.LowerCenter;
                 AlertText.supportRichText = true;
-                fixRich = true;
                 string[] splitArray = e.Data.Split(char.Parse(";"));
                 if(getOnlyID() == splitArray[1])
                 {
-                    VRCUiManager.prop_VRCUiManager_0.Method_Public_Void_String_0("<color=#5432a8>" + splitArray[0]+"</color> "+splitArray[2]);
+                    VRCUiManager.prop_VRCUiManager_0.Method_Public_Void_String_0("<color=#5432a8>" + splitArray[0]+"</color>"+splitArray[2]);
                 }
             };
 
@@ -49,19 +56,35 @@ namespace CuteCallout
             ws.OnClose += (sender, e) =>
             {
                 MelonLogger.Msg("WebSocket has been closed!");
-                MelonCoroutines.Start(Connecter());
+                if(modEnabled)
+                {
+                    MelonCoroutines.Start(Connecter());
+                }
             };
         }
 
-        public override void OnUpdate()
+        public void CallOutButton()
         {
-            if (RoomManager.prop_Boolean_0 && fixRich) // fix for richtext not dissapearing
+            uixButton.SetActive(modEnabled); //maybe move to "after ui init"
+            if (modEnabled && retry == 0)
             {
-                if (AlertText.color.a < 0.3f && AlertText.supportRichText)
+                ws.Send(getOnlyName() + ";" + getOnlyID());
+            }
+            else
+            {
+                MelonLogger.Msg("Mod is disabled or not connected to server");
+            }
+        }
+
+        public override void OnUpdate() //this thing throws like hundred "Object reference not set to an instance of an object" errors at app start, fix this dumbass!
+        {
+            if (RoomManager.prop_Boolean_0 && modEnabled) // fix for richtext not dissapearing
+            {
+                if (AlertText.color.a < 0.2f && AlertText.supportRichText)
                 {
                     AlertText.supportRichText = false;
-                    fixRich = false;
-                } else if (AlertText.color.a > 0.3f && !AlertText.supportRichText)
+                }
+                else if (AlertText.color.a > 0.2f && !AlertText.supportRichText)
                 {
                     AlertText.supportRichText = true;
                 }
@@ -109,6 +132,22 @@ namespace CuteCallout
             if (tail_length >= source.Length)
                 return source;
             return source.Substring(source.Length - tail_length);
+        }
+
+        public void ToogleMod()
+        {
+            if(modEnabled)
+            {
+                modEnabled = false;
+                ws.Close();
+            } else
+            {
+                modEnabled = true;
+                MelonCoroutines.Start(Connecter());
+            }
+            uixButton.SetActive(modEnabled);
+            modEnabledPref.Value = modEnabled;
+            MelonPreferences.Save();
         }
     }
 }

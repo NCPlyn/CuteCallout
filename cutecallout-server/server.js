@@ -1,5 +1,7 @@
 const WebSocket = require('ws')
 
+texts = [" is cute!","... again being adorable"," is just... awww"," CUTECUTECUTE"," is a good boy!"," == cute",", how are you so cuuteee???"," needs cuddles for being cute!"]
+
 const wss = new WebSocket.Server({ port: 8080 },()=>{
     console.log('server started')
 })
@@ -9,7 +11,7 @@ wss.on('connection', function connection(ws, req) {
    
    ws.on('message', (data) => {
       console.log('data received \n %o',data)
-      ws.send(data+";is cute!");
+      ws.send(data+";"+texts[Math.floor(Math.random()*texts.length)]);
    })
 })
 
