@@ -10,18 +10,22 @@ namespace CuteCallout
 {
     public class CuteCall : MelonMod
     {
-        WebSocket ws = new WebSocket("ws://localhost:8080");
+        WebSocket ws;
         int retry = 0;
         UnityEngine.UI.Text AlertText;
         bool modEnabled = true;
         internal static MelonPreferences_Entry<bool> modEnabledPref;
+        internal static MelonPreferences_Entry<string> WSIP;
         public static GameObject uixButton;
 
         public override void OnApplicationStart()
         {
+            //melonpreferences and UIEK stuff
             var category = MelonPreferences.CreateCategory("CuteCallout", "CuteCallout Settings");
             modEnabledPref = category.CreateEntry("modEnabledPref", true, is_hidden: true);
+            WSIP = category.CreateEntry("WSIP", "localhost:8950");
             modEnabled = modEnabledPref.Value;
+            ws = new WebSocket("ws://"+WSIP.Value);
 
             if (modEnabled)
             {
@@ -34,7 +38,7 @@ namespace CuteCallout
 
             ExpansionKitApi.GetExpandedMenu(ExpandedMenu.SettingsMenu).AddSimpleButton("Toogle Callout", ToogleMod);
 
-            ws.OnMessage += (sender, e) =>
+            ws.OnMessage += (sender, e) => //if websocket recieved message, display it
             {
                 AlertText = GameObject.Find("UserInterface/UnscaledUI/HudContent/Hud/AlertTextParent/Text").GetComponent<UnityEngine.UI.Text>();
                 AlertText.alignment = TextAnchor.LowerCenter;
@@ -76,9 +80,9 @@ namespace CuteCallout
             }
         }
 
-        public override void OnUpdate() //this thing throws like hundred "Object reference not set to an instance of an object" errors at app start, fix this dumbass!
+        public override void OnUpdate()
         {
-            if (RoomManager.prop_Boolean_0 && modEnabled) // fix for richtext not dissapearing
+            if (RoomManager.prop_Boolean_0 && AlertText != null && modEnabled) // fix for richtext not dissapearing
             {
                 if (AlertText.color.a < 0.2f && AlertText.supportRichText)
                 {
@@ -97,7 +101,7 @@ namespace CuteCallout
             {
                 retry++;
                 yield return new WaitForSeconds(10);
-                ws.Connect();
+                ws.ConnectAsync(); //async so it doesn't freeze the game
             }
             else
             {
@@ -119,7 +123,7 @@ namespace CuteCallout
         public string getOnlyName() //returns only name of the player, ommit steam id if present
         {
             string name = GameObject.Find("UserInterface/QuickMenu").GetComponent<QuickMenu>().field_Private_APIUser_0.displayName;
-            if(Regex.IsMatch(GetLast(name, 5), " [a-z0-9]{4}")) //ew what's this? a regex that can fail???
+            if(Regex.IsMatch(GetLast(name, 5), " [a-z0-9]{4}")) //ew what's this? a regex that can fail??? hell nah
             {
                 return name.Remove(name.Length - 5);
             } else
@@ -127,14 +131,14 @@ namespace CuteCallout
                 return name;
             }
         }
-        public string GetLast(string source, int tail_length)
+        public string GetLast(string source, int tail_length) //if called, get X last charactes from string
         {
             if (tail_length >= source.Length)
                 return source;
             return source.Substring(source.Length - tail_length);
         }
 
-        public void ToogleMod()
+        public void ToogleMod() //toggles mod...
         {
             if(modEnabled)
             {
@@ -145,7 +149,7 @@ namespace CuteCallout
                 modEnabled = true;
                 MelonCoroutines.Start(Connecter());
             }
-            uixButton.SetActive(modEnabled);
+            uixButton.SetActive(modEnabled); //toggles the "Call him out" button
             modEnabledPref.Value = modEnabled;
             MelonPreferences.Save();
         }

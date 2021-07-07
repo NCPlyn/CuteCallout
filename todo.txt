@@ -1,10 +1,5 @@
-dll:
-- domain instead of ip
-- fix richtext fix in update
-- get button active into onUiInit
+eh done?
 
-server:
-- format logs
- - from ip ; got this message ; sent this back to all
+would be good to have the WS secured and stuff...
 
-will it even work with more people? xD
+proper README tbd in future

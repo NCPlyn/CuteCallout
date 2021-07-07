@@ -36,5 +36,5 @@ using MelonLoader;
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
-[assembly: MelonInfo(typeof(CuteCallout.CuteCall), "CuteCallout", "0.0.1", "NCPlyn")]
+[assembly: MelonInfo(typeof(CuteCallout.CuteCall), "CuteCallout", "0.1.0", "NCPlyn")]
 [assembly: MelonGame("VRChat", "VRChat")]
