@@ -14,6 +14,8 @@ namespace CuteCallout
         int retry = 0;
         UnityEngine.UI.Text AlertText;
         bool modEnabled = true;
+        bool gotPing = true;
+        object PingPongCor;
         internal static MelonPreferences_Entry<bool> modEnabledPref;
         internal static MelonPreferences_Entry<string> WSIP;
         public static GameObject uixButton;
@@ -30,6 +32,7 @@ namespace CuteCallout
             if (modEnabled)
             {
                 MelonCoroutines.Start(Connecter());
+                PingPongCor = MelonCoroutines.Start(PingPong());
             }
 
             ExpansionKitApi.GetExpandedMenu(ExpandedMenu.UserQuickMenu).AddSimpleButton("Call him cute!",
@@ -47,6 +50,9 @@ namespace CuteCallout
                 if(getOnlyID() == splitArray[1])
                 {
                     VRCUiManager.prop_VRCUiManager_0.Method_Public_Void_String_0("<color=#5432a8>" + splitArray[0]+"</color>"+splitArray[2]);
+                } else if (e.Data == "Ping;Pong!")
+                {
+                    gotPing = true;
                 }
             };
 
@@ -82,7 +88,7 @@ namespace CuteCallout
 
         public override void OnUpdate()
         {
-            if (RoomManager.prop_Boolean_0 && AlertText != null && modEnabled) // fix for richtext not dissapearing
+            if (AlertText != null && modEnabled) // fix for richtext not dissapearing
             {
                 if (AlertText.color.a < 0.2f && AlertText.supportRichText)
                 {
@@ -106,6 +112,26 @@ namespace CuteCallout
             else
             {
                 MelonLogger.Msg("The reconnecting has failed.");
+            }
+        }
+
+        IEnumerator PingPong() //checks if the connection is ok, ws.OnClose might not fire sometimes
+        {
+            while(true)
+            {
+                yield return new WaitForSeconds(120);
+                if (modEnabled && retry == 0) //mod is enabled and we are not already trying to reconnect
+                {
+                    if (gotPing)
+                    {
+                        gotPing = false;
+                        ws.Send("Ping;Pong?");
+                    } else
+                    {
+                        MelonLogger.Msg("Didn't get pinged back, something is wrong... Trying to reconnect...");
+                        ws.Close();
+                    }
+                }
             }
         }
 
@@ -143,11 +169,13 @@ namespace CuteCallout
             if(modEnabled)
             {
                 modEnabled = false;
+                MelonCoroutines.Stop(PingPongCor);
                 ws.Close();
             } else
             {
                 modEnabled = true;
                 MelonCoroutines.Start(Connecter());
+                PingPongCor = MelonCoroutines.Start(PingPong());
             }
             uixButton.SetActive(modEnabled); //toggles the "Call him out" button
             modEnabledPref.Value = modEnabled;

@@ -8,11 +8,15 @@ const wss = new WebSocket.Server({ port: 8950 },()=>{
 });
 
 wss.on('connection', function connection(ws, req) {
-	var userIP = req.socket.remoteAddress;
+	var userIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 	console.log("\x1b[35mConnect: \x1b[0m"+userIP);
    
 	ws.on('message', (data) => {
 		if(!wait) {
+			if(data == "Ping;Pong?") {
+			ws.send("Ping;Pong!");
+			console.log("HearthBeat from "+userIP);
+			} else {
 			console.log("\x1b[34mRecieve: \x1b[0m'"+data+"' \x1b[36mfrom \x1b[0m"+userIP);
 			var outMsg = data+";"+texts[Math.floor(Math.random()*texts.length)];
 			console.log("\x1b[32mSending: \x1b[0m'"+outMsg+"'");
@@ -23,6 +27,7 @@ wss.on('connection', function connection(ws, req) {
 			setTimeout(function(){
 				wait=false;
 			}, 6000);
+			}
 		} else {
 			console.log("\x1b[31mBlocked: \x1b[0m'"+data+"' \x1b[36mfrom \x1b[0m"+userIP);
 		}

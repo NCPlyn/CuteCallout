@@ -2,3 +2,4 @@
 CuteCallout/bin
 CuteCallout/obj
 cutecallout-server/node_modules
+cutecallout-server/package-lock.json
